@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'EC2 instance for Python Agentic AI Application with CloudWatch Agent and Session Manager'
+Description: 'EC2 instance for Python Agentic AI Application with CloudWatch Agent'
 
 Parameters:
   InstanceType:
@@ -47,6 +47,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/CloudWatchApplicationSignalsFullAccess
       Policies:
         - PolicyName: BedrockInvokePolicy
           PolicyDocument:
