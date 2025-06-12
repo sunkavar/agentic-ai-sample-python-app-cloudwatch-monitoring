@@ -1,27 +1,31 @@
 #!/bin/bash
-
 # Setup script for Python Agentic AI Application on EC2
 # Usage: ./setup-app.sh <github-repo-url>
-
-set -e
-
-GITHUB_REPO_URL=${1:-"https://github.com/sunkavar/agentic-ai-sample-python-app-cloudwatch-monitoring.git"}
+set -eGITHUB_REPO_URL=${1:-"https://github.com/sunkavar/agentic-ai-sample-python-app-cloudwatch-monitoring.git"}
 APP_DIR="/home/ec2-user/agentic-ai-app"
 LOG_FILE="/var/log/app-setup.log"
-
-# Get AWS region dynamically from EC2 metadata
-AWS_REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-if [ -z "$AWS_REGION" ]; then
-    log "Warning: Could not retrieve AWS region from metadata, defaulting to us-east-1"
-    AWS_REGION="us-east-1"
-else
-    log "Detected AWS region: $AWS_REGION"
-fi
 
 # Logging function
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOG_FILE
 }
+
+# Get AWS region and instance ID using IMDSv2
+log "Getting metadata using IMDSv2..."
+
+# Get IMDSv2 token
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+
+# Get AWS Region
+AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+    -s http://169.254.169.254/latest/meta-data/placement/region)
+
+# Get Instance ID
+INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+    -s http://169.254.169.254/latest/meta-data/instance-id)
+
+log "AWS Region: $AWS_REGION, Instance ID: $INSTANCE_ID"
 
 log "Starting application setup..."
 
@@ -29,21 +33,29 @@ log "Starting application setup..."
 log "Updating system packages..."
 sudo yum update -y
 
-# Install Python 3.13
-log "Installing Python 3.13..."
-sudo yum install -y python3.13 python3.13-pip
+# Install git and other essential tools
+log "Installing git and essential tools..."
+sudo yum install git -y
 
-# Create symbolic links for python and pip
-log "Creating symbolic links..."
-sudo ln -sf /usr/bin/python3.13 /usr/bin/python3
-sudo ln -sf /usr/bin/python3.13 /usr/bin/python
-sudo ln -sf /usr/bin/pip3.13 /usr/bin/pip3
-sudo ln -sf /usr/bin/pip3.13 /usr/bin/pip
+# Upgrade python to 3.12
+log "Installing Python 3.12..."
+sudo yum install python3.12 -y
 
-# Install pip for Python 3.13 (alternative method)
+# Create symbolic links
+log "Creating symbolic links for Python 3.12..."
+sudo ln -sf /usr/bin/python3.12 /usr/bin/python
+
+# Install pip for Python 3.12
+log "Installing pip for Python 3.12..."
 curl -O https://bootstrap.pypa.io/get-pip.py
-python3.13 get-pip.py --user
-sudo ln -sf /home/ec2-user/.local/bin/pip /usr/local/bin/pip
+python3.12 get-pip.py
+
+# Create symbolic link for pip
+sudo ln -sf /usr/bin/pip3.12 /usr/bin/pip
+
+# Verify pip installation
+log "Verifying pip installation..."
+pip --version
 
 # Verify installations
 log "Python version: $(python --version)"
@@ -83,40 +95,17 @@ pip install --upgrade pip
 
 # Install required packages based on the application imports
 log "Installing strands and related packages..."
-pip install strands
-pip install strands-tools
+pip install strands-agents
+pip install strands-agents-tools
 
 log "Installing OpenTelemetry packages..."
 pip install opentelemetry-api
 pip install opentelemetry-sdk
-pip install opentelemetry-instrumentation
-pip install opentelemetry-exporter-otlp
-pip install aws-opentelemetry-distro[otlp]
+pip install aws-opentelemetry-distro
 
 log "Installing additional AWS and utility packages..."
 pip install boto3
 pip install requests
-
-# Test all required imports
-log "Testing all required Python imports..."
-cd "$APP_DIR"
-python3 -c "
-try:
-    from strands import Agent
-    from strands_tools import http_request
-    from strands.telemetry.tracer import get_tracer
-    from opentelemetry.sdk.trace import SpanProcessor
-    import logging
-    import os
-    from metrics_utils import save_metrics
-    print('✓ All imports successful')
-except ImportError as e:
-    print(f'✗ Import error: {e}')
-    exit(1)
-" || {
-    log "ERROR: Failed to import required modules"
-    exit 1
-}
 
 # Set up CloudWatch Agent configuration
 log "Setting up CloudWatch Agent..."
@@ -126,10 +115,10 @@ sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc/
 sudo cp CW-AgentConfig.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 # Update the log stream name with actual instance ID
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+log "Updating CloudWatch Agent configuration with instance ID: $INSTANCE_ID"
 sudo sed -i "s/i-06ba0de6XXXXXX/$INSTANCE_ID/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
-log "CloudWatch Agent configuration updated with instance ID: $INSTANCE_ID"
+log "CloudWatch Agent configuration updated with instance ID: $INSTANCE_ID and region: $AWS_REGION"
 
 # Start CloudWatch Agent
 log "Starting CloudWatch Agent..."
@@ -171,7 +160,7 @@ export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4316/v1/traces
 export OTEL_RESOURCE_ATTRIBUTES="aws.log.group.names=strands-agent-logs,service.name=strands-agent,deployment.environment=ec2:default"
 
 # Start the application
-opentelemetry-instrument python3 app.py
+opentelemetry-instrument python app.py
 EOF
 
 chmod +x "$APP_DIR/start-app.sh"
