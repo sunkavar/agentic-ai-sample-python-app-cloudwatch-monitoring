@@ -39,6 +39,11 @@ sudo yum update -y
 log "Installing git and essential tools..."
 sudo yum install git -y
 
+# Install CloudWatch Agent
+log "Installing CloudWatch Agent..."
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+sudo rpm -U ./amazon-cloudwatch-agent.rpm
+
 # Upgrade python to 3.12
 log "Installing Python 3.12..."
 sudo yum install python3.12 -y
