@@ -55,10 +55,6 @@ python3.12 get-pip.py
 # Create symbolic link for pip
 sudo ln -sf /usr/bin/pip3.12 /usr/bin/pip
 
-# Verify pip installation
-log "Verifying pip installation..."
-pip --version
-
 # Verify installations
 log "Python version: $(python --version)"
 log "Pip version: $(pip --version)"
@@ -91,10 +87,6 @@ fi
 
 log "All required application files found"
 
-# Install Python dependencies
-log "Installing Python dependencies..."
-pip install --upgrade pip
-
 # Install required packages based on the application imports
 log "Installing strands and related packages..."
 pip install strands-agents
@@ -103,6 +95,8 @@ pip install strands-agents-tools
 log "Installing OpenTelemetry packages..."
 pip install opentelemetry-api
 pip install opentelemetry-sdk
+pip install opentelemetry-exporter-otlp-proto-grpc
+pip install opentelemetry-instrumentation
 pip install aws-opentelemetry-distro
 
 log "Installing additional AWS and utility packages..."
