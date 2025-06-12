@@ -49,7 +49,7 @@ Resources:
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
         - arn:aws:iam::aws:policy/CloudWatchApplicationSignalsFullAccess
       Policies:
-        - PolicyName: BedrockInvokePolicy
+        - PolicyName: !Sub '${AWS::StackName} - BedrockInvokePolicy'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
