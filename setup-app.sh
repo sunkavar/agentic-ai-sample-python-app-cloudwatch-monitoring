@@ -142,38 +142,10 @@ chmod +x "$APP_DIR/app.py"
 chmod +r "$APP_DIR/metrics_utils.py"
 chmod +r "$APP_DIR/CW-AgentConfig.json"
 
-# Create manual startup script
-log "Creating manual startup script..."
-tee "$APP_DIR/start-app.sh" > /dev/null <<EOF
-#!/bin/bash
-cd $APP_DIR
-
-# Set environment variables for Application Signals with CloudWatch Agent
-export OTEL_METRICS_EXPORTER=none
-export OTEL_PYTHON_LOG_CORRELATION=true
-export OTEL_LOGS_EXPORTER=none
-export OTEL_AWS_APPLICATION_SIGNALS_ENABLED=true
-export OTEL_PYTHON_DISTRO=aws_distro
-export OTEL_PYTHON_CONFIGURATOR=aws_configurator
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-export OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT=http://localhost:4316/v1/metrics
-export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4316/v1/traces
-export OTEL_RESOURCE_ATTRIBUTES="aws.log.group.names=strands-agent-logs,service.name=strands-agent,deployment.environment=ec2:default"
-
-# Start the application
-opentelemetry-instrument python app.py
-EOF
-
-chmod +x "$APP_DIR/start-app.sh"
-
-
-
 log "Setup completed! Application code copied and CloudWatch Agent configured."
-log "Application Signals traces and metrics will be collected by CloudWatch Agent"
 log "Use the following commands to manage the application:"
-log "  - Start application manually: cd $APP_DIR && ./start-app.sh"
+log "  - Start application manually: cd /home/ec2-user/agentic-ai-app && python app.py"
 log "  - View CloudWatch Agent logs: sudo journalctl -u amazon-cloudwatch-agent -f"
 
 echo "Setup completed successfully! Check $LOG_FILE for detailed logs."
-echo "To run the application manually, use: cd $APP_DIR && ./start-app.sh"
-echo "Application Signals data will be available in CloudWatch console under Application Signals section."
+echo "To run the application manually, use: cd /home/ec2-user/agentic-ai-app && python app.py"
