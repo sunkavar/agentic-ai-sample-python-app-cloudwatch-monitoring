@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+
+from strands import Agent
+from strands_tools import http_request
+from strands.telemetry.tracer import get_tracer
+from opentelemetry.sdk.trace import SpanProcessor
+import logging
+import os
+from metrics_utils import save_metrics
+
+# Set the environment variables for AppSignals
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "aws.log.group.names=strands-agent-logs"
+os.environ["OTEL_METRICS_EXPORTER"] = "none"
+os.environ["OTEL_LOGS_EXPORTER"] = "none"
+os.environ["OTEL_AWS_APPLICATION_SIGNALS_ENABLED"] = "true"
+os.environ["OTEL_PYTHON_DISTRO"] = "aws_distro"
+os.environ["OTEL_PYTHON_CONFIGURATOR"] = "aws_configurator"
+os.environ["OTEL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf"
+os.environ["OTEL_TRACES_SAMPLER"] = "xray"
+os.environ["OTEL_TRACES_SAMPLER_ARG"] = "endpoint=http://localhost:2000"
+os.environ["OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT"] = "http://localhost:4316/v1/metrics"
+os.environ["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] = "http://localhost:4316/v1/traces"
+
+
+# Configure the tracer with log group name as resource attribute
+tracer = get_tracer(
+    service_name="weather-forecaster-strands-agent",
+    otlp_endpoint="http://localhost:4316/v1/traces",
+    otlp_headers={"Authorization": "Bearer TOKEN"},
+)
+
+# Configure the strands logger
+strands_logger = logging.getLogger("strands")
+strands_logger.setLevel(logging.INFO)  # Set to INFO or DEBUG to see more logs
+
+# Create a file handler with proper formatting
+file_handler = logging.FileHandler("strands_agents_sdk.log")
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s %(levelname)s [%(name)s] - %(message)s"
+))
+
+# Add the handler to the strands logger
+strands_logger.addHandler(file_handler)
+
+# Create a global variable to store the current trace ID
+current_trace_id = None
+
+# Custom span processor that captures trace ID 
+class LoggingSpanProcessor(SpanProcessor):
+    def on_start(self, span, parent_context=None):
+        global current_trace_id
+        # Get the hex representation of the trace ID
+        current_trace_id = format(span.context.trace_id, 'x')
+        
+    def on_end(self, span):
+        global current_trace_id
+        # Get the hex representation of the trace ID
+        current_trace_id = format(span.context.trace_id, 'x')
+        
+    def shutdown(self):
+        pass
+
+    def force_flush(self, timeout_millis=30000):
+        pass
+
+# Create and add the logging span processor
+tracer.tracer_provider.add_span_processor(
+    LoggingSpanProcessor()
+)
+
+# Define a weather-focused system prompt
+WEATHER_SYSTEM_PROMPT = """You are a weather assistant with HTTP capabilities. You can:
+
+1. Make HTTP requests to the National Weather Service API
+2. Process and display weather forecast data
+3. Provide weather information for locations in the United States
+
+When retrieving weather information:
+1. First get the coordinates or grid information using https://api.weather.gov/points/{latitude},{longitude} or https://api.weather.gov/points/{zipcode}
+2. Then use the returned forecast URL to get the actual forecast
+
+When displaying responses:
+- Format weather data in a human-readable way
+- Highlight important information like temperature, precipitation, and alerts
+- Handle errors appropriately
+- Convert technical terms to user-friendly language
+
+Always explain the weather conditions clearly and provide context for the forecast.
+"""
+
+# Create an agent with HTTP capabilities (tracing will be enabled automatically)
+weather_agent = Agent(
+    system_prompt=WEATHER_SYSTEM_PROMPT,
+    tools=[http_request],
+    # Add custom attributes for tracking
+    trace_attributes={
+        "session.id": "abc-1234",
+        "user.id": "demo@example.com",
+        "tags": [
+            "Python-AgentSDK",
+            "Observability-Tags",
+            "CloudWatch-Demo"
+        ]
+    },  
+)
+
+# Example usage
+if __name__ == "__main__":
+    print("\nWeather Forecaster Strands Agent\n")
+    print("This example demonstrates using Strands Agents' HTTP request capabilities")
+    print("to get weather forecasts from the National Weather Service API.")
+    print("\nOptions:")
+    print("  'demo weather' - Demonstrate weather API capabilities")
+    print("  'exit' - Exit the program")
+    print("\nOr simply ask about the weather in any US location:")
+    print("  'What's the weather like in San Francisco?'")
+    print("  'Will it rain tomorrow in Miami?'")
+
+    # Interactive loop
+    while True:
+        try:
+            user_input = input("\n> ")
+
+            if user_input.lower() == "exit":
+                print("\nGoodbye! 👋")
+                break
+
+            # Call the weather agent
+            response = weather_agent(user_input)
+            
+            # If using in conversational context, the response is already displayed
+            # This is just for demonstration purposes
+            print(str(response))
+            
+            # Log the entire response as a single entry
+            formatted_response = str(response).replace('\n', ' ')
+
+            # Inject trace_id for Trace to Log correlation
+            strands_logger.info(f"trace_id={current_trace_id} {formatted_response}")
+
+            # Get metrics summary
+            metrics_summary = response.metrics.get_summary()
+            
+            # Save metrics to file in EMF format
+            metrics_file = save_metrics(metrics_summary)
+            print(f"Metrics saved to {metrics_file}")
+             
+        except KeyboardInterrupt:
+            print("\n\nExecution interrupted. Exiting...")
+            break
+        except Exception as e:
+            print(f"\nAn error occurred: {str(e)}")
+            print("Please try a different request.")
