@@ -106,11 +106,6 @@ Resources:
           ToPort: 443
           CidrIp: 0.0.0.0/0
           Description: HTTPS access
-        - IpProtocol: tcp
-          FromPort: 8000
-          ToPort: 8000
-          CidrIp: 0.0.0.0/0
-          Description: Application port
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -144,18 +139,11 @@ Resources:
           #!/bin/bash
           yum update -y
           
-          # Install required packages
-          yum install -y git curl wget unzip
-          
           # Install AWS CLI v2
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           ./aws/install
-          
-          # Install CloudWatch Agent
-          wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
-          rpm -U ./amazon-cloudwatch-agent.rpm
-          
+                    
           # Download and run the setup script
           cd /home/ec2-user
           wget https://raw.githubusercontent.com/sunkavar/agentic-ai-sample-python-app-cloudwatch-monitoring/main/setup-app.sh -O setup-app.sh
@@ -190,7 +178,3 @@ Outputs:
   SessionManagerCommand:
     Description: Command to connect via Session Manager
     Value: !Sub 'aws ssm start-session --target ${EC2Instance} --region ${AWS::Region}'
-  
-  ApplicationURL:
-    Description: URL to access the application
-    Value: !Sub 'http://${EC2Instance.PublicIp}:8000'
