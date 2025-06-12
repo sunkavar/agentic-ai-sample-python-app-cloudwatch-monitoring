@@ -48,20 +48,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
       Policies:
-        - PolicyName: ApplicationSignalsPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:DescribeLogStreams
-                  - logs:DescribeLogGroups
-                  - cloudwatch:PutMetricData
-                  - application-signals:*
-                Resource: '*'
         - PolicyName: BedrockInvokePolicy
           PolicyDocument:
             Version: '2012-10-17'
@@ -70,22 +56,8 @@ Resources:
                 Action:
                   - bedrock:InvokeModel
                   - bedrock:InvokeModelWithResponseStream
-                  - bedrock:ListFoundationModels
-                  - bedrock:GetFoundationModel
-                Resource: '*'
-        - PolicyName: XRayPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - xray:PutTraceSegments
-                  - xray:PutTelemetryRecords
-                  - xray:GetSamplingRules
-                  - xray:GetSamplingTargets
-                  - xray:GetSamplingStatisticSummaries
-                Resource: '*'
-
+                Resource: - !Sub arn:${AWS::Partition}:bedrock:us-west-2::foundation-model/anthropic.claude-3-7-sonnet-20250219-v1:0
+                
   # Instance Profile
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -110,20 +82,7 @@ Resources:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
           Description: All outbound traffic
-
-  # CloudWatch Log Groups
-  ApplicationLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: strands-agent-logs
-      RetentionInDays: 14
-
-  MetricsLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: strands-agent-metrics
-      RetentionInDays: 14
-
+          
   # EC2 Instance
   EC2Instance:
     Type: AWS::EC2::Instance
