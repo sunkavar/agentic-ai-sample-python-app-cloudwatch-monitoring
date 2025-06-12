@@ -1,7 +1,9 @@
 #!/bin/bash
 # Setup script for Python Agentic AI Application on EC2
 # Usage: ./setup-app.sh <github-repo-url>
-set -eGITHUB_REPO_URL=${1:-"https://github.com/sunkavar/agentic-ai-sample-python-app-cloudwatch-monitoring.git"}
+set -e
+
+GITHUB_REPO_URL=${1:-"https://github.com/sunkavar/agentic-ai-sample-python-app-cloudwatch-monitoring.git"}
 APP_DIR="/home/ec2-user/agentic-ai-app"
 LOG_FILE="/var/log/app-setup.log"
 
