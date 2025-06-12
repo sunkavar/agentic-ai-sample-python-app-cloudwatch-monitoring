@@ -10,17 +10,8 @@ from metrics_utils import save_metrics
 
 # Set the environment variables for AppSignals
 os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "aws.log.group.names=strands-agent-logs"
-os.environ["OTEL_METRICS_EXPORTER"] = "none"
-os.environ["OTEL_LOGS_EXPORTER"] = "none"
-os.environ["OTEL_AWS_APPLICATION_SIGNALS_ENABLED"] = "true"
-os.environ["OTEL_PYTHON_DISTRO"] = "aws_distro"
-os.environ["OTEL_PYTHON_CONFIGURATOR"] = "aws_configurator"
-os.environ["OTEL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf"
-os.environ["OTEL_TRACES_SAMPLER"] = "xray"
-os.environ["OTEL_TRACES_SAMPLER_ARG"] = "endpoint=http://localhost:2000"
-os.environ["OTEL_AWS_APPLICATION_SIGNALS_EXPORTER_ENDPOINT"] = "http://localhost:4316/v1/metrics"
-os.environ["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] = "http://localhost:4316/v1/traces"
-
+os.environ["OTEL_TRACES_SAMPLER"] = "always_on"
+os.environ["OTEL_TRACES_SAMPLER_ARG"] = "1.0"
 
 # Configure the tracer with log group name as resource attribute
 tracer = get_tracer(
