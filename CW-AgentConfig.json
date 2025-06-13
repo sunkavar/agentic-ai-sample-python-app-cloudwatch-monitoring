@@ -10,12 +10,12 @@
           {
             "file_path": "/home/ec2-user/agentic-ai-app/strands_agents_sdk.log",
             "log_group_name": "strands-agent-logs",
-            "log_stream_name": "i-06ba0de6XXXXXX-strands-logs"
+            "log_stream_name": "i-abc12345XXXXX-strands-logs"
           },
           {
             "file_path": "/home/ec2-user/agentic-ai-app/strands_agent_metrics.json",
             "log_group_name": "strands-agent-metrics",
-            "log_stream_name": "i-06ba0de6XXXXXX-strands-metrics"
+            "log_stream_name": "i-abc12345XXXXX-strands-metrics"
           }
         ]
       }
