@@ -57,7 +57,7 @@ Parameters:
   
   SubnetId:
     Type: AWS::EC2::Subnet::Id
-    Description: Subnet ID where the instance will be launched (should be private subnet)
+    Description: Subnet ID where the instance will be launched
   
   
 Resources:
@@ -109,7 +109,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: 'Security group for Agentic AI Application - Restricted Access'
+      GroupDescription: 'Security group for Agentic AI Application'
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
