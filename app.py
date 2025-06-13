@@ -13,7 +13,7 @@ os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "aws.log.group.names=strands-agent-logs
 os.environ["OTEL_TRACES_SAMPLER"] = "always_on"
 os.environ["OTEL_TRACES_SAMPLER_ARG"] = "1.0"
 
-# Configure the tracer with log group name as resource attribute
+# Configure the tracer
 tracer = get_tracer(
     service_name="weather-forecaster-strands-agent",
     otlp_endpoint="http://localhost:4316/v1/traces",
