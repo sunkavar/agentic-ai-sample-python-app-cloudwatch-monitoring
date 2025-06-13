@@ -8,7 +8,7 @@ import logging
 import os
 from metrics_utils import save_metrics
 
-# Set the environment variables for AppSignals
+# Set the environment variables for Sampling and Trace log correlation
 os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "aws.log.group.names=strands-agent-logs"
 os.environ["OTEL_TRACES_SAMPLER"] = "always_on"
 os.environ["OTEL_TRACES_SAMPLER_ARG"] = "1.0"
