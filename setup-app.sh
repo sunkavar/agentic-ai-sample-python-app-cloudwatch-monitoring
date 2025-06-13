@@ -117,7 +117,7 @@ sudo cp CW-AgentConfig.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwat
 
 # Update the log stream name with actual instance ID
 log "Updating CloudWatch Agent configuration with instance ID: $INSTANCE_ID"
-sudo sed -i "s/i-06ba0de6XXXXXX/$INSTANCE_ID/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+sudo sed -i "s/i-abc12345XXXXX/$INSTANCE_ID/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 log "CloudWatch Agent configuration updated with instance ID: $INSTANCE_ID and region: $AWS_REGION"
 
