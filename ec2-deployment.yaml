@@ -111,16 +111,22 @@ Resources:
     Properties:
       GroupDescription: 'Security group for Agentic AI Application'
       VpcId: !Ref VpcId
-      SecurityGroupIngress:
+      SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-          Description: 'HTTPS access for Session Manager'
-      SecurityGroupEgress:
-        - IpProtocol: -1
+          Description: 'HTTPS outbound traffic'
+        - IpProtocol: tcp
+          FromPort: 53
+          ToPort: 53
           CidrIp: 0.0.0.0/0
-          Description: All outbound traffic
+          Description: 'DNS (TCP) outbound traffic'
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+          Description: 'DNS (UDP) outbound traffic'
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-SecurityGroup'
