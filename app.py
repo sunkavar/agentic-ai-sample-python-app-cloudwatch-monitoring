@@ -134,7 +134,6 @@ if __name__ == "__main__":
             
             # Save metrics to file in EMF format
             metrics_file = save_metrics(metrics_summary)
-            print(f"Metrics saved to {metrics_file}")
              
         except KeyboardInterrupt:
             print("\n\nExecution interrupted. Exiting...")
