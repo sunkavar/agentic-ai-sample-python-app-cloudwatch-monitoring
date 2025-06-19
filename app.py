@@ -3,6 +3,7 @@
 from strands import Agent
 from strands_tools import http_request
 from strands.telemetry.tracer import get_tracer
+from strands.models import BedrockModel
 from opentelemetry.sdk.trace import SpanProcessor
 import logging
 import os
@@ -79,8 +80,15 @@ When displaying responses:
 Always explain the weather conditions clearly and provide context for the forecast.
 """
 
+# Create a Bedrock model
+bedrock_model = BedrockModel(
+    model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    region_name="us-east-1" #region will be replaced by EC2 instance launch region during the setup
+)
+
 # Create an agent with HTTP capabilities (tracing will be enabled automatically)
 weather_agent = Agent(
+    model=bedrock_model,
     system_prompt=WEATHER_SYSTEM_PROMPT,
     tools=[http_request],
     # Add custom attributes for tracking
