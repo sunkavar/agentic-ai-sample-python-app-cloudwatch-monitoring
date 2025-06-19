@@ -119,6 +119,10 @@ sudo cp CW-AgentConfig.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwat
 log "Updating CloudWatch Agent configuration with instance ID: $INSTANCE_ID"
 sudo sed -i "s/i-abc12345XXXXX/$INSTANCE_ID/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
+# Update app.py with actual region
+log "Updating app.py with region: $AWS_REGION"
+sed -i "s/us-east-1/$AWS_REGION/g" "$APP_DIR/app.py"
+
 log "CloudWatch Agent configuration updated with instance ID: $INSTANCE_ID and region: $AWS_REGION"
 
 # Start CloudWatch Agent
